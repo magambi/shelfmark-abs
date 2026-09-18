@@ -165,7 +165,15 @@ def audiobookshelf_settings() -> list[SettingsField]:
             style="default",
             callback=trigger_abs_sync_now,
         ),
-    ]
+         CheckboxField(
+            key="ABS_AUTO_PROVISION_USER",
+            label="Auto-Provision Users From Audiobookshelf",
+            description=(
+                "Automatically copy user account from Audiobookshelf on first OIDC login. When disabled, users are not copied from Audiobookshelf."
+            ),
+            default=False,
+        ),
+  ]
 
 
 def _on_save_abs(values: dict[str, Any]) -> dict[str, Any]:

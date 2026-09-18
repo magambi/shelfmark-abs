@@ -28,6 +28,7 @@ Configure in **Settings → Security → Authentication Method → OIDC**.
 | Admin Group Name | Group granted admin access. Leave empty for database-only roles | — |
 | Use Admin Group for Authorization | Toggle group-based admin detection | `true` |
 | Auto-Provision Users | Create accounts on first login | `true` |
+| Auto-Provision Users from Audiobookshelf| Copy accounts from Audiobookshelf on first login | `false` |
 | Login Button Label | Custom text for the sign-in button | — |
 
 Use **Test Connection** to verify discovery, client configuration, and the provider's token signing keys (JWKS) before attempting login.
@@ -40,7 +41,8 @@ On login, Shelfmark matches the OIDC identity to a user account in this order:
 
 1. **OIDC subject** — a user who has logged in through this provider before.
 2. **Email** — a local account with the same (unique) email address. This only happens when the provider also asserts `email_verified: true` for the address; an unverified email would let anyone claim a local account by registering its address at the IdP.
-3. Otherwise, a new account is created when **Auto-Provision Users** is enabled (username conflicts get a numeric suffix), or the login is rejected with "Account not found" when it is disabled.
+3. If **Auto-Provision Users** is enabled, a new account is created (username conflicts get a numeric suffix), or the login is rejected with "Account not found" when it is disabled.
+4. If **Auto-Provision Users From Audiobookshelf** is enabled, a new account is copied from Audiobookshelf (username conflicts get a numeric suffix), or the login is rejected with "Account not found" when it is disabled.
 
 If the `email_verified` claim is missing or `false`, email linking is silently skipped — a common surprise when the address was never verified at the identity provider (e.g. Keycloak's **Email verified** toggle on the user, or Authentik accounts created without email verification). Make sure the `email` scope is requested and the address is marked verified in your IdP.
 

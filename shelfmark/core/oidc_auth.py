@@ -7,6 +7,7 @@ Flask route handlers are registered separately in main.py.
 from typing import TYPE_CHECKING, Any
 
 from shelfmark.core.external_user_linking import upsert_external_user
+from shelfmark.integrations.audiobookshelf.provisioning import abs_copy_user_info
 
 if TYPE_CHECKING:
     from shelfmark.core.user_db import UserDB
@@ -65,6 +66,10 @@ def provision_oidc_user(
 
     Returns None when no existing user is matchable and `allow_create=False`.
     """
+
+    # Copy and filter by ABS users if ABS_PROVISON_USER is enabled.
+    user_info = abs_copy_user_info( user_info )
+ 
     oidc_subject = user_info["oidc_subject"]
     user, _ = upsert_external_user(
         db,
@@ -77,8 +82,10 @@ def provision_oidc_user(
         subject=oidc_subject,
         allow_email_link=allow_email_link,
         sync_role=is_admin is not None,
-        allow_create=allow_create,
+        allow_create=allow_create or user_info.get("allow_create", False),
         collision_strategy="suffix",
         context="oidc_login",
     )
     return user
+
+
