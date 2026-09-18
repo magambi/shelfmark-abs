@@ -4,7 +4,7 @@ import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useMountEffect } from '../hooks/useMountEffect';
 import { getMetadataBookInfo } from '../services/api';
-import type { CreateRequestPayload } from '../types';
+import type { ContentType, CreateRequestPayload } from '../types';
 import type { RequestConfirmationPreview } from '../utils/requestConfirmation';
 import {
   applyRequestNoteToPayload,
@@ -19,6 +19,7 @@ interface RequestConfirmationModalProps {
   payload: CreateRequestPayload | null;
   extraPayloads?: CreateRequestPayload[];
   allowNotes: boolean;
+  requireType?: boolean;
   onConfirm: (
     payload: CreateRequestPayload,
     extraPayloads?: CreateRequestPayload[],
@@ -30,6 +31,7 @@ interface RequestConfirmationModalSessionProps {
   payload: CreateRequestPayload;
   extraPayloads?: CreateRequestPayload[];
   allowNotes: boolean;
+  requireType?: boolean;
   onConfirm: (
     payload: CreateRequestPayload,
     extraPayloads?: CreateRequestPayload[],
@@ -70,6 +72,7 @@ export function RequestConfirmationModal({
   payload,
   extraPayloads = EMPTY_PAYLOADS,
   allowNotes,
+  requireType = false,
   onConfirm,
   onClose,
 }: RequestConfirmationModalProps) {
@@ -83,6 +86,7 @@ export function RequestConfirmationModal({
       payload={payload}
       extraPayloads={extraPayloads}
       allowNotes={allowNotes}
+      requireType={requireType}
       onConfirm={onConfirm}
       onClose={onClose}
     />
@@ -93,12 +97,18 @@ function RequestConfirmationModalSession({
   payload,
   extraPayloads = EMPTY_PAYLOADS,
   allowNotes,
+  requireType = false,
   onConfirm,
   onClose,
 }: RequestConfirmationModalSessionProps) {
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+
+  const isCombinedRequest = extraPayloads.length > 0;
+  const showTypeBlock = requireType && !isCombinedRequest;
+  const requestedType: ContentType =
+    payload.context.content_type === 'audiobook' ? 'audiobook' : 'ebook';
 
   const handleClose = useCallback(() => {
     if (isSubmitting) {
@@ -176,7 +186,8 @@ function RequestConfirmationModalSession({
   if (!preview) return null;
 
   const titleId = 'request-confirmation-modal-title';
-  const confirmDisabled = isSubmitting || (allowNotes && note.length > MAX_REQUEST_NOTE_LENGTH);
+  const confirmDisabled =
+    isSubmitting || (allowNotes && note.length > MAX_REQUEST_NOTE_LENGTH);
 
   const submit = async () => {
     if (confirmDisabled) {
@@ -185,7 +196,18 @@ function RequestConfirmationModalSession({
 
     setIsSubmitting(true);
     try {
-      const nextPayload = applyRequestNoteToPayload(payload, note, allowNotes);
+      let nextPayload = applyRequestNoteToPayload(payload, note, allowNotes);
+      if (showTypeBlock) {
+        nextPayload = {
+          ...nextPayload,
+          book_data: { ...nextPayload.book_data, content_type: requestedType },
+          context: {
+            ...nextPayload.context,
+            content_type: requestedType,
+            type_selected: true,
+          },
+        };
+      }
       const success = await onConfirm(
         nextPayload,
         extraPayloads.length > 0 ? extraPayloads : undefined,
@@ -299,6 +321,39 @@ function RequestConfirmationModalSession({
               </div>
             </div>
           </div>
+
+          {showTypeBlock && (
+            <div className="space-y-1">
+              <span className="text-sm font-medium">Request type</span>
+              <div
+                className="grid grid-cols-2 gap-1 rounded-lg border border-(--border-muted) p-1"
+                role="radiogroup"
+                aria-label="Request type"
+              >
+                {(['ebook', 'audiobook'] as const).map((type) => {
+                  const active = requestedType === type;
+                  return (
+                    <span
+                      key={type}
+                      role="radio"
+                      aria-checked={active}
+                      aria-disabled={!active}
+                      className={`rounded-md px-3 py-1.5 text-center text-sm font-medium ${
+                        active ? 'bg-sky-600 text-white' : 'cursor-not-allowed opacity-40'
+                      }`}
+                    >
+                      {type === 'ebook' ? 'eBook' : 'Audiobook'}
+                    </span>
+                  );
+                })}
+              </div>
+              <p className="text-xs opacity-60">
+                {requestedType === 'ebook'
+                  ? 'Requesting an eBook. To request the Audiobook edition, go back and pick Audiobooks from the content selector next to the search box.'
+                  : 'Requesting an Audiobook. To request the eBook edition, go back and pick Books from the content selector next to the search box.'}
+              </p>
+            </div>
+          )}
 
           {allowNotes && (
             <div className="space-y-1">

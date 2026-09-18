@@ -19,6 +19,7 @@ import { SelfSettingsModal, SettingsModal } from './components/settings';
 import { ToastContainer } from './components/ToastContainer';
 import { UrlSearchBootstrapMount } from './components/UrlSearchBootstrapMount';
 import { SearchModeProvider } from './contexts/SearchModeContext';
+import { LibraryAvailabilityProvider } from './contexts/LibraryAvailabilityContext';
 import { useSocket } from './contexts/SocketContext';
 import { DEFAULT_LANGUAGES, DEFAULT_SUPPORTED_FORMATS } from './data/languages';
 import { useBookTargetDeselectSync } from './hooks/app/useBookTargetDeselectSync';
@@ -298,6 +299,9 @@ function App() {
     oidcButtonLabel,
     hideLocalAuth,
     oidcAutoRedirect,
+    kavitaLoginEnabled,
+    kavitaDefaultSource,
+    kavitaButtonLabel,
     loginError,
     isLoggingIn,
     setIsAuthenticated,
@@ -2421,6 +2425,13 @@ function App() {
 
   const mainAppContent = (
     <SearchModeProvider searchMode={effectiveSearchMode}>
+      <LibraryAvailabilityProvider
+        libraryUrl={config?.calibre_web_url || ''}
+        audiobookLibraryUrl={config?.audiobook_library_url || ''}
+        allowMissingType={config?.requests_allow_missing_type ?? true}
+        searchContentType={effectiveContentType}
+        combinedMode={combinedMode}
+      >
       <div ref={headerRef} className="fixed top-0 right-0 left-0 z-40">
         <Header
           calibreWebUrl={config?.calibre_web_url || ''}
@@ -2680,6 +2691,7 @@ function App() {
               payload={pendingRequestPayload}
               extraPayloads={pendingRequestExtraPayloads}
               allowNotes={allowRequestNotes}
+              requireType={config?.requests_require_type ?? false}
               onConfirm={handleConfirmRequest}
               onClose={() => {
                 setPendingRequestPayload(null);
@@ -2787,6 +2799,7 @@ function App() {
         }}
         onShowToast={showToast}
       />
+      </LibraryAvailabilityProvider>
     </SearchModeProvider>
   );
 
@@ -2933,6 +2946,9 @@ function App() {
                 oidcButtonLabel={oidcButtonLabel}
                 hideLocalAuth={hideLocalAuth}
                 oidcAutoRedirect={oidcAutoRedirect}
+                kavitaLoginEnabled={kavitaLoginEnabled}
+                kavitaDefaultSource={kavitaDefaultSource}
+                kavitaButtonLabel={kavitaButtonLabel}
               />
             )
           }
