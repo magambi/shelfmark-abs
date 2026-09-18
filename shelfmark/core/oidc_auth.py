@@ -69,20 +69,31 @@ def provision_oidc_user(
 
     # Copy and filter by ABS users if ABS_PROVISON_USER is enabled.
     user_info = abs_copy_user_info( user_info )
- 
+
+    # If either allow_create or user_info["allow_create"] is True, effective_allow_create is True.
+    # If "allow_create" is missing from user_info, it defaults to False.
+    effective_allow_create = bool(allow_create or user_info.get("allow_create", False))
+
+    # Determine role from is_admin and user_info. user_info role takes precedence.
+    role = "admin" if is_admin else "user"
+    sync_role=is_admin is not None
+    if (user_info.get("role") is not None):
+        role = user_info.get("role")
+        sync_role = True
+
     oidc_subject = user_info["oidc_subject"]
     user, _ = upsert_external_user(
         db,
         auth_source="oidc",
         username=user_info["username"] or oidc_subject,
-        role="admin" if is_admin else "user",
+        role=role,
         email=user_info.get("email"),
         display_name=user_info.get("display_name"),
         subject_field="oidc_subject",
         subject=oidc_subject,
         allow_email_link=allow_email_link,
-        sync_role=is_admin is not None,
-        allow_create=allow_create or user_info.get("allow_create", False),
+        sync_role=sync_role,
+        allow_create=effective_allow_create,
         collision_strategy="suffix",
         context="oidc_login",
     )

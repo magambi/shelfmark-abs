@@ -225,6 +225,26 @@ def abs_list_users(cfg: AbsConfig) -> list[dict[str, Any]]:
     return [u for u in users if isinstance(u, dict)] if isinstance(users, list) else []
 
 
+def abs_get_user(cfg: AbsConfig, username: str | None = None, email: str | None = None) -> dict[str, Any] | None:
+    """Return Audiobookshelf user if a user matches *username* or *email* already exists (case-insensitive)."""
+    target_user = (username or "").strip().lower()
+    target_email = (email or "").strip().lower()
+
+    if not target_user and not target_email:
+        return None
+
+    for u in abs_list_users(cfg):
+        existing_user = str(u.get("username") or "").strip().lower()
+        existing_email = str(u.get("email") or "").strip().lower()
+
+        if target_user and existing_user == target_user:
+            return u
+        if target_email and existing_email == target_email:
+            return u
+
+    return None
+
+
 def abs_user_exists(cfg: AbsConfig, username: str) -> bool:
     """Return True if a user with *username* already exists (case-insensitive)."""
     target = (username or "").strip().lower()
