@@ -27,6 +27,11 @@ _ADMIN_EVENT_OPTIONS = [
     {"value": NotificationEvent.REQUEST_REJECTED.value, "label": "Request rejected"},
     {"value": NotificationEvent.DOWNLOAD_COMPLETE.value, "label": "Download complete"},
     {"value": NotificationEvent.DOWNLOAD_FAILED.value, "label": "Download failed"},
+    {"value": NotificationEvent.LIBRARY_AVAILABLE.value, "label": "eBook Added to Library"},
+    {
+        "value": NotificationEvent.AUDIOBOOK_LIBRARY_AVAILABLE.value,
+        "label": "Audiobook Added to Library",
+    },
 ]
 _ROUTE_EVENT_OPTIONS = [
     {"value": _ROUTE_EVENT_ALL, "label": "All"},
@@ -261,7 +266,7 @@ def _test_admin_notification_action(current_values: dict[str, Any]) -> dict[str,
 register_on_save("notifications", _on_save_notifications)
 
 
-@register_settings("notifications", "Notifications", icon="bell", order=7)
+@register_settings("notifications", "Notifications", icon="bell", order=9)
 def notifications_settings() -> list[SettingsField]:
     """Global notifications settings."""
     return [

@@ -56,6 +56,9 @@ export interface Book {
   titles_by_language?: Record<string, string>;
   username?: string;
   retry_available?: boolean;
+  kavita_available?: boolean;
+  kavita_series_owned?: number;
+  audiobookshelf_available?: boolean;
 }
 
 // Status response types
@@ -208,6 +211,7 @@ export interface RequestContextPayload {
   source: string;
   content_type: ContentType;
   request_level: 'book' | 'release';
+  type_selected?: boolean;
 }
 
 export interface CreateRequestPayload {
@@ -265,6 +269,8 @@ export type BooksOutputMode = 'folder' | 'booklore' | 'email';
 export interface AppConfig {
   calibre_web_url: string;
   audiobook_library_url: string;
+  requests_require_type?: boolean;
+  requests_allow_missing_type?: boolean;
   search_page_title: string;
   debug: boolean;
   build_version: string;
@@ -329,6 +335,7 @@ export interface LoginCredentials {
   username: string;
   password: string;
   remember_me: boolean;
+  source?: string;
 }
 
 export interface AuthResponse {
@@ -344,6 +351,9 @@ export interface AuthResponse {
   oidc_button_label?: string;
   hide_local_auth?: boolean;
   oidc_auto_redirect?: boolean;
+  kavita_login_enabled?: boolean;
+  kavita_default_source?: string;
+  kavita_button_label?: string;
 }
 
 export interface ActingAsUserSelection {
